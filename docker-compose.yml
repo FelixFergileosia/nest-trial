@@ -1,14 +1,11 @@
-version: '3.8'
-
+# docker-compose.yml
 services:
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    build: .
     ports:
-      - "${PORT}:${PORT}"   # host_port from .env -> forward to container’s internal port
-    env_file: .env        # load .env into container so process.env.PORT works
-    restart: unless-stopped
-    volumes:
-      - .:/usr/src/app
-    command: ["node", "index.js"]
+      - '3000:3000'
+    environment:
+      - PORT=3000
+    # Define shared enviroment and PLEASE anything sensitive information (ex: secret key) on the .env file
+    env_file:
+      - .env

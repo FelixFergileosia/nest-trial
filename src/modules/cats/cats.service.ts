@@ -1,8 +1,10 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { Prisma, Cat } from '@prisma/client';
+import { Cat, Prisma } from 'generated/prisma';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { PrismaService } from '../../common/database/prisma.service';
 import { CreateCatDto } from '../../common/dto/create-cat.dto';
 import { UpdateCatDto } from '../../common/dto/update-cat.dto';
+
 
 @Injectable()
 export class CatsService {

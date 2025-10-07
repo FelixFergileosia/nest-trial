@@ -1,13 +1,12 @@
-FROM node:22.20.0
+FROM node:18
 
-WORKDIR /usr/src/app
+WORKDIR /app
 
 COPY package*.json ./
 
-RUN npm install --production
+RUN npm install
 
+# Copy file inside dist into ./dist folder (from outside into container dist)
 COPY . .
 
-EXPOSE 8000
-
-CMD ["node", "index.js"]
+CMD ["sh", "-c", "npm run db:deploy && npm run start:dev"]
