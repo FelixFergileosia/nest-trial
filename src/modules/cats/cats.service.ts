@@ -1,36 +1,60 @@
-import { Injectable } from '@nestjs/common';
-import { CreateCatDto } from './dto/create-cat.dto';
-import { UpdateCatDto } from './dto/update-cat.dto';
-
-// Import data mock
-import catsData from './cats.mock.json';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { Prisma, Cat } from '@prisma/client';
+import { PrismaService } from '../../common/database/prisma.service';
+import { CreateCatDto } from '../../common/dto/create-cat.dto';
+import { UpdateCatDto } from '../../common/dto/update-cat.dto';
 
 @Injectable()
 export class CatsService {
-  private cats = catsData;
+  constructor(private readonly prisma: PrismaService) {}
 
-  create(createCatDto: CreateCatDto) {
-    return 'This action adds a new cat';
+  // CREATE
+  async create(dto: CreateCatDto): Promise<Cat> {
+    return this.prisma.cat.create({
+      data: { name: dto.name, age: dto.age },
+    });
   }
 
-  findAll() {
-    return this.cats;
+  // READ ALL
+  async findAll(): Promise<Cat[]> {
+    return this.prisma.cat.findMany({ orderBy: { id: 'asc' } });
   }
 
-  findOne(id: number) {
-    let cat = this.cats.find(cat => cat.id === id);
-    if(!cat) {
-      return `Cat with id ${id} not found`;
-    } else {
-      return cat;
+  // READ ONE
+  async findOne(id: number): Promise<Cat> {
+    const cat = await this.prisma.cat.findUnique({ where: { id } });
+    if (!cat) throw new NotFoundException(`Cat with id ${id} not found`);
+    return cat;
+  }
+
+  // UPDATE
+  async update(id: number, dto: UpdateCatDto): Promise<Cat> {
+    try {
+      return await this.prisma.cat.update({
+        where: { id },
+        data: {
+          ...(dto.name !== undefined && { name: dto.name }),
+          ...(dto.age !== undefined && { age: dto.age }),
+        },
+      });
+    } catch (e) {
+      if ((e as Prisma.PrismaClientKnownRequestError).code === 'P2025') {
+        throw new NotFoundException(`Cat with id ${id} not found`);
+      }
+      throw e;
     }
   }
 
-  update(id: number, updateCatDto: UpdateCatDto) {
-    return `This action updates a #${id} cat`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} cat`;
+  // DELETE
+  async remove(id: number): Promise<{ message: string }> {
+    try {
+      await this.prisma.cat.delete({ where: { id } });
+      return { message: `Cat #${id} removed` };
+    } catch (e) {
+      if ((e as Prisma.PrismaClientKnownRequestError).code === 'P2025') {
+        throw new NotFoundException(`Cat with id ${id} not found`);
+      }
+      throw e;
+    }
   }
 }
